@@ -1,0 +1,33 @@
+i
+
+name: Helm Chart CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-chart:
+    name: Validate Helm chart
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.1
+
+      - name: Lint Helm chart
+        run: helm lint .
+
+      - name: Render Kubernetes manifests
+        run: helm template myapp .
