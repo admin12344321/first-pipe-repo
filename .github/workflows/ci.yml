@@ -27,7 +27,7 @@ jobs:
         uses: azure/setup-helm@v4.3.1
 
       - name: Lint Helm chart
-        run: helm lint .
+        run: helm lint ./myapp-chart
 
       - name: Render Kubernetes manifests
-        run: helm template myapp .
+        run: helm template myapp ./myapp-chart
