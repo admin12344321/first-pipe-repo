@@ -45,13 +45,16 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}      
+          password: ${{ secrets.GITHUB_TOKEN }}
           
-     
+          
       - name: Push Docker image
         run: |
           IMAGE_TAG="${GITHUB_SHA::7}"
           docker push ghcr.io/${{ github.repository_owner }}/myapp:${IMAGE_TAG}
+
+     
+      
 
 
           
