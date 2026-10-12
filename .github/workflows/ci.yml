@@ -75,6 +75,6 @@ jobs:
           fi
   
 
-        run: |
+      run: |
           IMAGE_TAG="${GITHUB_SHA::7}"
           docker push ghcr.io/${{ github.repository_owner }}/myapp:${IMAGE_TAG}
