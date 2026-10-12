@@ -45,11 +45,36 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-
-
+          password: ${{ secrets.GITHUB_TOKEN }}      
+          
       - name: Push Docker image
+        run: |
+         IMAGE_TAG="${GITHUB_SHA::7}"
+          docker push ghcr.io/${{ github.repository_owner }}/myapp:${IMAGE_TAG}
+
+          
+
+        
+      - name: Update Helm chart image tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE_TAG="${GITHUB_SHA::7}"
+
+          sed -i "s/tag: \".*\"/tag: \"${IMAGE_TAG}\"/" myapp-chart/values.yaml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add myapp-chart/values.yaml
+
+          if git diff --cached --quiet; then
+            echo "Image tag unchanged; nothing to commit."
+          else
+            git commit -m "chore: update myapp image tag to ${IMAGE_TAG}"
+            git push
+          fi
+  
+
         run: |
           IMAGE_TAG="${GITHUB_SHA::7}"
           docker push ghcr.io/${{ github.repository_owner }}/myapp:${IMAGE_TAG}
