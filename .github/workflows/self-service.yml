@@ -64,15 +64,27 @@ jobs:
           app_name = os.environ["APP_NAME"]
           environment = os.environ["ENVIRONMENT"]
 
-          template = Path("idp/templates/README.md")
-          output = Path("generated-apps") / app_name / "README.md"
+          import shutil
 
-          content = template.read_text()
-          content = content.replace("{{APP_NAME}}", app_name)
-          content = content.replace("{{ENVIRONMENT}}", environment)
+          template_dir = Path("idp/templates/app")
+          output_dir = Path("generated-apps") / app_name
 
-          output.write_text(content)
-          print(f"Generated project: {output}")
+          shutil.copytree(
+              template_dir,
+              output_dir,
+              dirs_exist_ok=True,
+              ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+          )
+
+          readme = output_dir / "README.md"
+          readme_content = readme.read_text()
+          readme_content = readme_content.replace("{{APP_NAME}}", app_name)
+          readme_content = readme_content.replace(
+              "{{ENVIRONMENT}}", environment
+          )
+          readme.write_text(readme_content)
+
+          print(f"Generated application project: {output_dir}")
           PY
 
       - name: Verify generated project
@@ -80,10 +92,23 @@ jobs:
           APP_NAME: ${{ inputs.app_name }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
+          test -s "generated-apps/$APP_NAME/app.py"
+          test -s "generated-apps/$APP_NAME/Dockerfile"
           test -s "generated-apps/$APP_NAME/README.md"
+
           grep -Fq "# $APP_NAME" "generated-apps/$APP_NAME/README.md"
           grep -Fq -- "- Environment: $ENVIRONMENT" \
             "generated-apps/$APP_NAME/README.md"
+
+          if grep -Eq '\{\{(APP_NAME|ENVIRONMENT)\}\}' \
+            "generated-apps/$APP_NAME/README.md"; then
+            echo "Unreplaced placeholders found in README."
+            exit 1
+          fi
+
+          python3 -m py_compile "generated-apps/$APP_NAME/app.py"
+          rm -rf "generated-apps/$APP_NAME/__pycache__"
+
           echo "Project generation and validation succeeded."
 
       - name: Upload generated project
